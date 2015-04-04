@@ -89,6 +89,86 @@ class has_begin {
     enum { value = sizeof(test<Derived>(0)) == sizeof(true_t) };
 };
 
+template<typename T>
+class has_find {
+    struct Fallback { int find; };
+    struct Derived : T, Fallback { };
+
+    template<typename U, U> struct Check;
+
+    template<typename U>
+    static false_t test(Check<int Fallback::*, &U::find> *);
+
+    template<typename U>
+    static true_t test(...);
+
+    public:
+    enum { value = sizeof(test<Derived>(0)) == sizeof(true_t) };
+};
+
+
+// Recognizing pair types
+//
+// If a type is non-fundamental, and has
+// first and second members, then it is a pair
+template<typename T>
+class has_first {
+    struct Fallback { int first; };
+    struct Derived : T, Fallback { };
+
+    template<typename U, U> struct Check;
+
+    template<typename U>
+    static false_t test(Check<int Fallback::*, &U::first> *);
+
+    template<typename U>
+    static true_t test(...);
+
+    public:
+    enum { value = sizeof(test<Derived>(0)) == sizeof(true_t) };
+};
+
+template<typename T>
+class has_second {
+    struct Fallback { int second; };
+    struct Derived : T, Fallback { };
+
+    template<typename U, U> struct Check;
+
+    template<typename U>
+    static false_t test(Check<int Fallback::*, &U::second> *);
+
+    template<typename U>
+    static true_t test(...);
+
+    public:
+    enum { value = sizeof(test<Derived>(0)) == sizeof(true_t) };
+};
+
+template <typename T, bool B>
+struct is_pair_type_impl {
+    enum {
+        value = has_first<T>::value &&
+                has_second<T>::value
+    };
+};
+
+
+template <typename T>
+struct is_pair_type_impl<T, true> {
+    enum { value = 0 };
+};
+
+template <typename T>
+struct is_pair_type {
+    enum {
+        value = is_pair_type_impl<
+            T, std::is_fundamental<T>::value
+        >::value
+    };
+};
+
+
 } // namespace traits
 
 } // namespace qap

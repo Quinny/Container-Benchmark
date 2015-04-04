@@ -9,8 +9,9 @@ namespace qap {
 namespace color {
 
 const std::string reset = "\033[0m";
-const std::string red =   "\033[31m";
+const std::string red   = "\033[31m";
 const std::string green = "\033[32m";
+const std::string cyan  = "\033[36m";
 
 // Just a little helper class for writing colored output
 // to the terminal

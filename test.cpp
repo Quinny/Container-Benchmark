@@ -20,8 +20,8 @@ std::pair<std::string, int> g() {
 }
 
 int main() {
-    std::stack<std::pair<std::string, int>> vec;
+    std::vector<int> vec;
     std::unordered_map<std::string, int> umap;
-    qap::bm::compare_all(vec, g, umap, g, 100000);
+    qap::bm::compare_all(vec, rand, umap, g, 100000);
     return 0;
 }
