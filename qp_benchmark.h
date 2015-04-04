@@ -3,8 +3,9 @@
 
 #include <chrono>
 #include <iostream>
-#include <cstddef> // for size_t
+#include <cstddef>    // for size_t
 #include <type_traits>
+#include <algorithm> // for std::find
 #include "qp_traits.h"
 #include "qp_colors.h"
 
@@ -140,9 +141,13 @@ double move(Container const& c) {
 // ---------------------------------------
 // Look up benchmarks
 // --------------------------------------
+
+// If no find function exists and no iterators exist
+// then we can't do anything
 template <typename Container, typename Gen>
 typename std::enable_if<
-    !qap::traits::has_find<Container>::value,
+    !qap::traits::has_find<Container>::value
+    && !qap::traits::has_begin<Container>::value,
     double
 >::type
 find(Container const& c, Gen g, std::size_t n) {
@@ -150,6 +155,28 @@ find(Container const& c, Gen g, std::size_t n) {
     return 0;
 }
 
+// If no find function exists BUT we do have iterators,
+// then we can use std::find()
+template <typename Container, typename Gen>
+typename std::enable_if<
+    !qap::traits::has_find<Container>::value
+    && qap::traits::has_begin<Container>::value,
+    double
+>::type
+find(Container const& c, Gen g, std::size_t n) {
+    _("No find() function found, using std::find()", qap::color::yellow) << std::endl;
+    auto t1 = high_resolution_clock::now();
+    while (n--)
+        std::find(c.begin(), c.end(), g());
+    auto t2 = high_resolution_clock::now();
+    auto time_span = duration_cast<duration<double>>(t2 - t1);
+    std::cout << time_span.count() << std::endl;
+    return time_span.count();
+}
+
+// If the container is a pair type (e.g. maps)
+// then we want to lookup the .first member (the key)
+// from the generating function
 template <typename Container, typename Gen>
 auto find(Container const& c, Gen g, std::size_t n)
 ->
@@ -167,6 +194,9 @@ typename std::enable_if<
     return time_span.count();
 }
 
+// If its not a pair type (e.g. vector, set)
+// then we can just look up the straight value
+// from the generating function
 template <typename Container, typename Gen>
 auto find(Container const& c, Gen g, std::size_t n)
 ->
