@@ -2,6 +2,12 @@
 #define QP_CONTAINER_TRAITS_H_
 #include <type_traits>
 
+// Quinn Perfetto 2015
+//
+// Type traits for identifing different types of containers and functions
+// provided by them.  They are used for deciding which functions to use as
+// benchmarks
+
 namespace qap {
 
 namespace traits {
@@ -15,10 +21,7 @@ using false_t = struct {char _[2]; };
 static_assert(sizeof(true_t) != sizeof(false_t),
         "ERROR! true and false types have same size!");
 
-// Checks if a given type has a push_back function
-// with argument T::value_type
-//
-// Useful for identifying sequence containers
+// Check if a class has a push_back
 template<typename T>
 class has_push_back {
     struct Fallback { int push_back; };
@@ -36,6 +39,31 @@ class has_push_back {
     enum { value = sizeof(test<Derived>(0)) == sizeof(true_t) };
 };
 
+// Check if a class has a push
+template<typename T>
+class has_push {
+    struct Fallback { int push; };
+    struct Derived : T, Fallback { };
+
+    template<typename U, U> struct Check;
+
+    template<typename U>
+    static false_t test(Check<int Fallback::*, &U::push> *);
+
+    template<typename U>
+    static true_t test(...);
+
+    public:
+    enum { value = sizeof(test<Derived>(0)) == sizeof(true_t) };
+};
+
+// Generally, only sequence containers have a push_back function
+template <typename T>
+struct is_sequence_container {
+    enum { value = has_push_back<T>::value };
+};
+
+// Check if an insert function exists
 template<typename T>
 class has_insert {
     struct Fallback { int insert; };
@@ -53,21 +81,12 @@ class has_insert {
     enum { value = sizeof(test<Derived>(0)) == sizeof(true_t) };
 };
 
-template<typename T>
-class has_push {
-    struct Fallback { int push; };
-    struct Derived : T, Fallback { };
-
-    template<typename U, U> struct Check;
-
-    template<typename U>
-    static false_t test(Check<int Fallback::*, &U::push> *);
-
-    template<typename U>
-    static true_t test(...);
-
-    public:
-    enum { value = sizeof(test<Derived>(0)) == sizeof(true_t) };
+// We cannot solely rely on the insert function to deduce if a container
+// is associative (map, unordered_map, set, etc).  The reason is most sequence
+// containers have an insert function, and the call will be ambiguous
+template <typename T>
+struct is_associative {
+    enum { value = has_insert<T>::value && !has_push_back<T>::value };
 };
 
 // Check to see if a class has a begin() function
@@ -89,6 +108,7 @@ class has_begin {
     enum { value = sizeof(test<Derived>(0)) == sizeof(true_t) };
 };
 
+// Check if a find function exists for look ups
 template<typename T>
 class has_find {
     struct Fallback { int find; };
@@ -145,6 +165,10 @@ class has_second {
     enum { value = sizeof(test<Derived>(0)) == sizeof(true_t) };
 };
 
+
+// if a type is non-fundamental (not a primitive type)
+// and has first and second members, then it is assumed
+// to be a pair type
 template <typename T, bool B>
 struct is_pair_type_impl {
     enum {
