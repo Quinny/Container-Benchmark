@@ -1,0 +1,6 @@
+#ifndef _QP_BENCHMARK_MAIN_
+#define _QP_BENCHMARK_MAIN_
+
+#include "qp_container_benchmark.h"
+
+#endif

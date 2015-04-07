@@ -1,11 +1,9 @@
-#include "qp_container_benchmark.h"
 #include <random>
 #include <vector>
-#include <list>
 #include <map>
 #include <unordered_map>
-#include <queue>
 #include <stack>
+#include "qp_bm"
 
 // Just some simple functions for testing purposes
 std::string random_string() {
