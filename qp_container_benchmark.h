@@ -25,6 +25,14 @@ namespace bm {
 using namespace std::chrono;
 qap::color::writer _(std::cout);
 
+template <typename Func>
+double time_operation(Func f) {
+    auto t1 = high_resolution_clock::now();
+    f();
+    auto t2 = high_resolution_clock::now();
+    return duration_cast<duration<double>>(t2 - t1).count();
+}
+
 // ---------------------------------------
 // Insert Benchmarks
 // --------------------------------------
@@ -37,12 +45,11 @@ typename std::enable_if<
     double
 >::type
 insert(Container& c, Gen g, std::size_t n) {
-    auto t1 = high_resolution_clock::now();
-    while (n--)
-        c.insert(g());
-    auto t2 = high_resolution_clock::now();
-    auto time_span = duration_cast<duration<double>>(t2 - t1);
-    return time_span.count();
+    return time_operation([&]() {
+            while (n--)
+                c.insert(g());
+            }
+        );
 }
 
 // For sequence containers we want to use push_back
@@ -52,12 +59,11 @@ typename std::enable_if<
     double
 >::type
 insert(Container& c, Gen g, std::size_t n) {
-    auto t1 = high_resolution_clock::now();
-    while (n--)
-        c.push_back(g());
-    auto t2 = high_resolution_clock::now();
-    auto time_span = duration_cast<duration<double>>(t2 - t1);
-    return time_span.count();
+    return time_operation([&]() {
+            while (n--)
+                c.push_back(g());
+            }
+        );
 }
 
 // Limited access containers (queue, stack, etc)
@@ -68,12 +74,11 @@ typename std::enable_if<
     double
 >::type
 insert(Container& c, Gen g, std::size_t n) {
-    auto t1 = high_resolution_clock::now();
-    while (n--)
-        c.push(g());
-    auto t2 = high_resolution_clock::now();
-    auto time_span = duration_cast<duration<double>>(t2 - t1);
-    return time_span.count();
+    return time_operation([&]() {
+            while (n--)
+                c.push(g());
+            }
+        );
 }
 
 // ---------------------------------------
@@ -88,12 +93,11 @@ typename std::enable_if<
     double
 >::type
 iterate(Container const& c) {
-    auto t1 = high_resolution_clock::now();
-    for (auto i : c)
-    ; // suppress warnings with semi colon on next line
-    auto t2 = high_resolution_clock::now();
-    auto time_span = duration_cast<duration<double>>(t2 - t1);
-    return time_span.count();
+    return time_operation([&]() {
+            for (auto i : c)
+            ; // suppress warnings with semi colon on next line
+        }
+    );
 }
 
 template <typename Container>
@@ -111,11 +115,10 @@ iterate(Container& c) {
 // --------------------------------------
 template <typename Container>
 double copy(Container const& c) {
-    auto t1 = high_resolution_clock::now();
-    auto c2 = c;
-    auto t2 = high_resolution_clock::now();
-    auto time_span = duration_cast<duration<double>>(t2 - t1);
-    return time_span.count();
+    return time_operation([&]() {
+            auto c2 = c;
+        }
+    );
 }
 
 // ---------------------------------------
@@ -123,11 +126,10 @@ double copy(Container const& c) {
 // --------------------------------------
 template <typename Container>
 double move(Container const& c) {
-    auto t1 = high_resolution_clock::now();
-    auto c2 = std::move(c);
-    auto t2 = high_resolution_clock::now();
-    auto time_span = duration_cast<duration<double>>(t2 - t1);
-    return time_span.count();
+    return time_operation([&]() {
+            auto c2 = std::move(c);
+        }
+    );
 }
 
 // ---------------------------------------
@@ -153,14 +155,12 @@ typename std::enable_if<
     qap::traits::has_find<Container>::value,
     double
 >::type
-find(Container const& c, Gen g, std::size_t n)
-{
-    auto t1 = high_resolution_clock::now();
-    while (n--)
-        c.find(g());
-    auto t2 = high_resolution_clock::now();
-    auto time_span = duration_cast<duration<double>>(t2 - t1);
-    return time_span.count();
+find(Container const& c, Gen g, std::size_t n) {
+    return time_operation([&]() {
+        while (n--)
+            c.find(g());
+        }
+    );
 }
 
 // ---------------------------------------
